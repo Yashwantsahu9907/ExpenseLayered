@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ExpenseLayered/ExpenseLayeredApi.csproj" />
+  <Project Path="ExpenseLayeredMVC/ExpenseLayeredMVC.csproj" />
+</Solution>
