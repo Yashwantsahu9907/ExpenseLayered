@@ -23,4 +23,11 @@ public class AuthController : ControllerBase
         var result = await _authService.LoginUser(loginDto);
         return StatusCode(result.StatusCode, result);
     }
+
+    [HttpPost("Register")]
+    public async Task<IActionResult> RegisterUser([FromBody]RegisterDto registerDto)
+    {
+        var result = await _authService.RegisterUser(registerDto);
+        return StatusCode(result.StatusCode, result);
+    }
 }

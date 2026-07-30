@@ -109,4 +109,46 @@ public class AuthService : IAuthService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    // REGISTER 
+    public async Task<ResponseResult<User>> RegisterUser(RegisterDto dto)
+    {
+        try
+        {
+            var existing = await _context.Users.AnyAsync(x => x.Email == dto.Email);
+            if(existing)
+            {
+                return new ResponseResult<User>
+                {
+                    StatusCode = 401,
+                    IsSuccess = false,
+                    Message = "User is already exist with this email",
+                    Data = null
+                };
+            }
+           await _context.AddAsync(new User
+            {
+                Name = dto.Name,
+                Email = dto.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                CreatedAt = DateTime.UtcNow,
+            });
+            await _context.SaveChangesAsync();
+            return new ResponseResult<User>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Register successfully",
+            };
+        }
+        catch (Exception)
+        {
+            return new ResponseResult<User>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = "Something went wrong"
+            };
+        }
+    }
 }
