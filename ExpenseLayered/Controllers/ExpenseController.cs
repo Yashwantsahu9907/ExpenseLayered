@@ -6,32 +6,59 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace ExpenseLayeredApi.Controllers
+namespace ExpenseLayeredApi.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class ExpenseController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ExpenseController : ControllerBase
+    private readonly IExpenseService _expenseService;
+
+    // Constructor Injection
+    public ExpenseController(IExpenseService expenseService)
     {
-        private readonly IExpenseService _expenseService;
+        _expenseService = expenseService;
+    }
 
-        // Constructor Injection
-        public ExpenseController(IExpenseService expenseService)
+    [Authorize]
+    [HttpPost("CreateExpense")]
+    public async Task<IActionResult> CreateExpense([FromBody]ExpenseDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token match and store
+        if (userIdClaim == null)
         {
-            _expenseService = expenseService;
+            return Unauthorized("UserId claim not found.");
         }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _expenseService.CreateExpense(dto, userId);
+        return Ok(result);
+    }
 
-        [Authorize]
-        [HttpPost("CreateExpense")]
-        public async Task<IActionResult> CreateExpense([FromBody]ExpenseDto dto)
+    [Authorize]
+    [HttpPut("UpdateExpense")]
+    public async Task<IActionResult> UpdateExpense([FromBody]ExpenseUpdateDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token match and store
-            if (userIdClaim == null)
-            {
-                return Unauthorized("UserId claim not found.");
-            }
-            int userId = int.Parse(userIdClaim.Value);
-            var result = await _expenseService.CreateExpense(dto, userId);
-            return Ok(result);
+            return Unauthorized("UserId claim not found.");
         }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _expenseService.UpdateExpense(dto, userId);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpDelete("DeleteExpense/{id}")]
+    public async Task<IActionResult> DeleteExpense(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("UserId claim not found.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _expenseService.DeleteExpense(id, userId);
+        return Ok(result);
     }
 }
