@@ -148,4 +148,88 @@ public class ExpenseService : IExpenseService
             };
         }
     }
+
+    // Get Expense by Id
+    public async Task<ResponseResult<ExpenseDto>> GetExpenceById(int id, int userId)
+    {
+        try
+        {
+            var expence = await _context.Expenses.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            if (expence == null)
+            {
+                return new ResponseResult<ExpenseDto>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "Expence not Found"
+                };
+            }
+            return new ResponseResult<ExpenseDto>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "expense Found Successfully",
+                Data = new ExpenseDto
+                {
+                    Id = expence.Id,
+                    Title = expence.Title,
+                    Amount = expence.Amount,
+                    CategoryId = expence.CategoryId,
+                    Description = expence.Description
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseResult<ExpenseDto>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message,
+            };
+        }
+    }
+
+
+    // Get all Expense
+    public async Task<ResponseResult<List<ExpenseDto>>> GetAllExpence(int userId)  
+    {
+        try
+        {
+            var expense = await _context.Expenses.Where(x => x.UserId == userId && !x.IsDeleted).AsNoTracking().Select(x => new ExpenseDto
+            {
+                Id = x.Id,
+                Amount = x.Amount,
+                Title = x.Title,
+                Description = x.Description,
+                CategoryId = x.CategoryId,
+            }).ToListAsync();
+
+            if (!expense.Any())
+            {
+                return new ResponseResult<List<ExpenseDto>>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "No expense found"
+                };
+            }
+            return new ResponseResult<List<ExpenseDto>>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "All expenses found successfully",
+                Data = expense
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseResult<List<ExpenseDto>>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
 }

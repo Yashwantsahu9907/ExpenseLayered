@@ -61,4 +61,33 @@ public class ExpenseController : ControllerBase
         var result = await _expenseService.DeleteExpense(id, userId);
         return Ok(result);
     }
+
+
+    [Authorize]
+    [HttpGet("GetExpenseById/{id}")]
+    public async Task<IActionResult> GetExpenseById(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("UserId claim not found.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _expenseService.GetExpenceById(id, userId);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("GetAllExpense")]
+    public async Task<IActionResult> GetAllExpence()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("UserId claim not found.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _expenseService.GetAllExpence(userId);
+        return Ok(result);
+    }
 }

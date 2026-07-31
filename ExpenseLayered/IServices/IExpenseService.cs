@@ -8,5 +8,7 @@ namespace ExpenseLayeredApi.IServices
         Task<ResponseResult<ExpenseDto>> CreateExpense(ExpenseDto dto, int userId);
         Task<ResponseResult<ExpenseUpdateDto>> UpdateExpense(ExpenseUpdateDto dto, int userId);
         Task<ResponseResult<bool>> DeleteExpense(int id, int userId);
+        Task<ResponseResult<ExpenseDto>> GetExpenceById(int id, int userId);
+        Task<ResponseResult<List<ExpenseDto>>> GetAllExpence(int userId);
     }
 }
