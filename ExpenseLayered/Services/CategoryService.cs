@@ -89,4 +89,121 @@ public class CategoryService : ICategoryService
     }
 
     // Update category 
+    public async Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int userId)
+    {
+        try
+        {
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.Id && x.UserId == userId && !x.IsDeleted);
+            if(category == null)
+            {
+                return new ResponseResult<CategoryUpdateDto>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "User not found"
+                };
+            }
+            category.Name = dto.Name; // update category
+            category.UpdatedAt = DateTime.UtcNow;
+            category.UpdatedBy = userId;
+            await _context.SaveChangesAsync();
+            return new ResponseResult<CategoryUpdateDto>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Category Updated Successfully",
+                Data = new CategoryUpdateDto
+                {
+                    Id = category.Id,
+                    Name = category.Name,
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = userId
+                }
+            };
+        }
+        catch(Exception ex)
+        {
+            return new ResponseResult<CategoryUpdateDto>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    // Delete Category
+    public async Task<ResponseResult<bool>> DeleteCategory(int id, int userId)
+    {
+        try
+        {
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+            if( category == null )
+            {
+                return new ResponseResult<bool>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "Category not found"
+                };
+            }
+            category.IsDeleted = true;
+            category.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return new ResponseResult<bool>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Category deleted SuccessFully"
+            };
+        }
+        catch(Exception ex)
+        {
+            return new ResponseResult<bool>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    //Get category by id
+    public async Task<ResponseResult<CategoryDto>> GetCategoryById(int id, int userId)
+    {
+        try
+        {
+            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id==id && x.UserId==userId && !x.IsDeleted);
+            if(category == null )
+            {
+                return new ResponseResult<CategoryDto>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "Category Not Found"
+                };
+            }
+            return new ResponseResult<CategoryDto>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Category Found Successfully",
+                Data = new CategoryDto
+                {
+                    Id = id,
+                    Name = category.Name,
+                }
+            };
+        }
+        catch( Exception ex )
+        {
+            return new ResponseResult<CategoryDto>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
 }

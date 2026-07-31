@@ -44,4 +44,46 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.GetAllCategory(userId);
         return Ok(result);
     }
+
+    [Authorize]
+    [HttpPut("CategoryUpdate")]
+    public async Task<IActionResult> UpdateCategory([FromBody]CategoryUpdateDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("UserId claim not found.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _categoryService.UpdateCategory(dto, userId);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpDelete("DeleteCategory/{id}")]
+    public async Task<IActionResult> DeleteCategory(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("UserId claim not found.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _categoryService.DeleteCategory(id, userId);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("GetCategoryById/{id}")]
+    public async Task<IActionResult> GetCategoryById(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("UserId claim not found.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _categoryService.GetCategoryById(id, userId);
+        return Ok(result);
+    }
 }
