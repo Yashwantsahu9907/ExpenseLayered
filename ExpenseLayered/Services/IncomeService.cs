@@ -97,4 +97,124 @@ public class IncomeService : IIncomeService
             };
         }
     }
+
+    // Delete Income
+    public async Task<ResponseResult<bool>> DeleteIncome(int id, int userId)
+    {
+        try
+        {
+            var income = await _context.Incomes.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            if (income == null)
+            {
+                return new ResponseResult<bool>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "User and income not found"
+                };
+            }
+            income.IsDeleted = true;
+            income.UpdatedAt = DateTime.UtcNow;
+            income.UpdatedBy = userId;
+            await _context.SaveChangesAsync();
+            return new ResponseResult<bool>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "Income Deleted successfullly"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseResult<bool>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    // Get income by id
+    public async Task<ResponseResult<IncomeDto>> GetIncomeById(int id, int userId)
+    {
+        try
+        {
+            var income = _context.Incomes.AsNoTracking().FirstOrDefault(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            if (income == null)
+            {
+                return new ResponseResult<IncomeDto>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "Income not found"
+                };
+            }
+            return new ResponseResult<IncomeDto>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "income found successfully",
+                Data = new IncomeDto
+                {
+                    Id = income.Id,
+                    Title = income.Title,
+                    Amount = income.Amount,
+                    IncomeDate = income.IncomeDate,
+                    CreatedAt = income.CreatedAt
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseResult<IncomeDto>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    // Get All Income
+    public async Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int id, int userId)
+    {
+        try
+        {
+            var income = await _context.Incomes.Where(x => x.UserId == userId && !x.IsDeleted).AsNoTracking().Select(x => new IncomeDto
+            {
+                Id = x.Id,
+                Amount = x.Amount,
+                Title = x.Title,
+                IncomeDate = x.IncomeDate,
+                CreatedAt = x.CreatedAt
+            }).ToListAsync();
+            if (!income.Any())
+            {
+                return new ResponseResult<List<IncomeDto>>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "No income found"
+                };
+            }
+            return new ResponseResult<List<IncomeDto>>
+            {
+                StatusCode = 200,
+                IsSuccess = true,
+                Message = "All income found successfully",
+                Data = income
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseResult<List<IncomeDto>>
+            {
+                StatusCode = 500,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
 }

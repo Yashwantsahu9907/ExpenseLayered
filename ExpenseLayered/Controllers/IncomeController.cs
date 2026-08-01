@@ -44,4 +44,48 @@ public class IncomeController : ControllerBase
         var result = await _incomeService.UpdateIncome(dto, userId);
         return Ok(result);
     }
+
+    [Authorize]
+    [HttpDelete("DeleteIncome/{id}")]
+    public async Task<IActionResult> DeleteIncome(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("userId claim not found");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _incomeService.DeleteIncome(id, userId);
+        return Ok(result);
+    }
+
+
+    [Authorize]
+    [HttpGet("GetIncomeById/{id}")]
+    public async Task<IActionResult> GetIncomeById(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("userId claim not found");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _incomeService.GetIncomeById(id, userId);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("GetAllIncome")]
+    public async Task<IActionResult> GetAllIncome(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("userId claim not found");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+        var result = await _incomeService.GetAllIncome(id, userId);
+        return Ok(result);
+    }
+
 }
