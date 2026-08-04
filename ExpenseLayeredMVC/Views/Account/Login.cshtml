@@ -1,0 +1,55 @@
+@model LoginDto
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold">Login</h3>
+                </div>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger d-flex align-items-center rounded-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>@ViewBag.Error</div>
+                    </div>
+                }
+
+                <form asp-action="Login" method="post">
+                    <div class="mb-3">
+                        <label for="Email" class="form-label text-secondary small mb-1">Email</label>
+                        <input asp-for="Email" class="form-control bg-light border-0 py-2" id="Email" placeholder="Enter your email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="Password" class="form-label text-secondary small mb-1">Password</label>
+                        <input asp-for="Password" type="password" class="form-control bg-light border-0 py-2" id="Password" placeholder="Enter your password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                        Login
+                    </button>
+                </form>
+
+                <div class="text-center text-secondary small">
+                    Don't have an account? <a asp-action="Register" class="text-decoration-none">Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
