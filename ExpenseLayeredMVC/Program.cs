@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add MVC Services
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews();  // register MVC framework line Controller , model , view 
 
-builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpContextAccessor();  // give permission to access Httpcontext any where  
 
 // HttpClient & API Services
 builder.Services.AddHttpClient<AuthApiService>();
@@ -14,10 +14,6 @@ builder.Services.AddHttpClient<CategoryApiService>();
 builder.Services.AddHttpClient<ExpenseApiService>();
 builder.Services.AddHttpClient<IncomeApiService>();
 
-builder.Services.AddScoped<AuthApiService>();
-builder.Services.AddScoped<CategoryApiService>();
-builder.Services.AddScoped<ExpenseApiService>();
-builder.Services.AddScoped<IncomeApiService>();
 
 // Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -34,7 +30,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Home/Error");   // production me koi exception aaye to custome error page dikhao
     app.UseHsts();
 }
 

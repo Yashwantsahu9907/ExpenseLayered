@@ -5,41 +5,56 @@ namespace ExpenseLayeredMVC.Services;
 
 public class ExpenseApiService : BaseApiService
 {
-    public ExpenseApiService(HttpClient httpClient, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-        : base(httpClient, configuration, httpContextAccessor)
+    // Constructor
+    public ExpenseApiService(HttpClient httpClient, IConfiguration configuration,
+        IHttpContextAccessor httpContextAccessor) : base(httpClient, configuration, httpContextAccessor)
     {
     }
 
-    public async Task<ResponseResult<List<ExpenseDto>>?> GetAllExpensesAsync()
+    // Get All Expenses
+    public async Task<ResponseResult<List<ExpenseDto>>> GetAllExpensesAsync()
     {
         AddAuthorizationHeader();
-        return await _httpClient.GetFromJsonAsync<ResponseResult<List<ExpenseDto>>>($"{_baseUrl}Expense/GetAllExpense");
+        var result = await _httpClient.GetFromJsonAsync<ResponseResult<List<ExpenseDto>>>(_baseUrl + "Expense/GetAllExpense");
+        return result;
     }
 
-    public async Task<ResponseResult<ExpenseDto>?> GetExpenseByIdAsync(int id)
+    // Get Expense By Id
+    public async Task<ResponseResult<ExpenseDto>> GetExpenseByIdAsync(int id)
     {
         AddAuthorizationHeader();
-        return await _httpClient.GetFromJsonAsync<ResponseResult<ExpenseDto>>($"{_baseUrl}Expense/GetExpenseById/{id}");
+        var result = await _httpClient.GetFromJsonAsync<ResponseResult<ExpenseDto>>(
+            _baseUrl + "Expense/GetExpenseById/" + id);
+        return result;
     }
 
-    public async Task<ResponseResult<ExpenseDto>?> CreateExpenseAsync(ExpenseDto dto)
+    // Create Expense
+    public async Task<ResponseResult<ExpenseDto>> CreateExpenseAsync(ExpenseDto dto)
     {
         AddAuthorizationHeader();
-        var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Expense/CreateExpense", dto);
-        return await response.Content.ReadFromJsonAsync<ResponseResult<ExpenseDto>>();
+        var response = await _httpClient.PostAsJsonAsync(
+            _baseUrl + "Expense/CreateExpense", dto);
+        // Convert JSON into C# Object
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<ExpenseDto>>();
+        return result;
     }
 
-    public async Task<ResponseResult<ExpenseUpdateDto>?> UpdateExpenseAsync(ExpenseUpdateDto dto)
+    // Update Expense
+    public async Task<ResponseResult<ExpenseUpdateDto>> UpdateExpenseAsync(ExpenseUpdateDto dto)
     {
         AddAuthorizationHeader();
-        var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}Expense/UpdateExpense", dto);
-        return await response.Content.ReadFromJsonAsync<ResponseResult<ExpenseUpdateDto>>();
+        var response = await _httpClient.PutAsJsonAsync(
+            _baseUrl + "Expense/UpdateExpense", dto);
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<ExpenseUpdateDto>>();
+        return result;
     }
 
-    public async Task<ResponseResult<bool>?> DeleteExpenseAsync(int id)
+    // Delete Expense
+    public async Task<ResponseResult<bool>> DeleteExpenseAsync(int id)
     {
         AddAuthorizationHeader();
-        var response = await _httpClient.DeleteAsync($"{_baseUrl}Expense/DeleteExpense/{id}");
-        return await response.Content.ReadFromJsonAsync<ResponseResult<bool>>();
+        var response = await _httpClient.DeleteAsync(_baseUrl + "Expense/DeleteExpense/" + id);
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<bool>>();
+        return result;
     }
 }

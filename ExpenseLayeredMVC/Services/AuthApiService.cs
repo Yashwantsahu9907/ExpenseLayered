@@ -5,8 +5,8 @@ namespace ExpenseLayeredMVC.Services;
 
 public class AuthApiService
 {
-    private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient; // used to call api
+    private readonly IConfiguration _configuration; // reade baseurl from appsettingjson
 
     public AuthApiService(HttpClient httpClient, IConfiguration configuration)
     {
@@ -14,26 +14,21 @@ public class AuthApiService
         _configuration = configuration;
     }
 
-    public async Task<ResponseResult<string>?> Register(RegisterDto dto)
+    // Register User
+    public async Task<ResponseResult<string>> Register(RegisterDto dto)
     {
-        var baseUrl = _configuration["ApiSettings:BaseUrl"];
-
-        var response = await _httpClient.PostAsJsonAsync(
-            $"{baseUrl}Auth/Register",
-            dto);
-
-        return await response.Content.ReadFromJsonAsync<ResponseResult<string>>();
+        var baseUrl = _configuration["ApiSettings:BaseUrl"]; // read baseurl
+        var response = await _httpClient.PostAsJsonAsync(baseUrl + "Auth/Register", dto);  // call register api
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<string>>(); // Convert JSON response into C# object
+        return result;
     }
 
-
+    // Login User
     public async Task<ResponseResult<LoginResponseDto>> LoginUser(LoginDto dto)
     {
-        var response = await _httpClient.PostAsJsonAsync(
-            "https://localhost:7118/api/Auth/Login",
-            dto);
-
+        var baseUrl = _configuration["ApiSettings:BaseUrl"];
+        var response = await _httpClient.PostAsJsonAsync(baseUrl + "Auth/Login", dto);
         var result = await response.Content.ReadFromJsonAsync<ResponseResult<LoginResponseDto>>();
-
-        return result!;
+        return result;
     }
 }

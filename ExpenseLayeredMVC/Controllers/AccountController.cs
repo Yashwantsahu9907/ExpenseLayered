@@ -3,7 +3,7 @@ using ExpenseLayeredMVC.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;   // Read JWT Token
 using System.Security.Claims;
 
 namespace ExpenseLayeredMVC.Controllers;
@@ -11,17 +11,14 @@ namespace ExpenseLayeredMVC.Controllers;
 public class AccountController : Controller
 {
     private readonly AuthApiService _authApiService;
-
     public AccountController(AuthApiService authApiService)
     {
         _authApiService = authApiService;
     }
-
     public IActionResult Login()
     {
         return View();
     }
-
     public IActionResult Register()
     {
         return View();
@@ -31,17 +28,18 @@ public class AccountController : Controller
     public async Task<IActionResult> Register(RegisterDto dto)
     {
         if (!ModelState.IsValid)
-            return View(dto);
-
-        var result = await _authApiService.Register(dto);
+        {
+            return View(dto);  // if validation fail Return same page and keep entered data
+        }
+        var result = await _authApiService.Register(dto); // call the api
 
         if (result != null && result.IsSuccess)
         {
-            TempData["Success"] = result.Message;
+            TempData["Success"] = result.Message; //use tempdata because if i use viewbag data will be lost because after successful registration page redirect to login page
+
             return RedirectToAction("Login");
         }
-
-        ViewBag.Error = result?.Message;
+        ViewBag.Error = result.Message;
         return View(dto);
     }
 
@@ -52,45 +50,32 @@ public class AccountController : Controller
         {
             return View(dto);
         }
-
         var result = await _authApiService.LoginUser(dto);
-
-        if (result == null || !result.IsSuccess || string.IsNullOrEmpty(result.Data?.Token))
+        if (result == null || !result.IsSuccess)
         {
-            ViewBag.Error = result?.Message ?? "Login failed.";
+            ViewBag.Error = "Invalid Email or Password";
             return View(dto);
         }
-
-        var handler = new JwtSecurityTokenHandler();
+        var handler = new JwtSecurityTokenHandler();  // Read JWT Token
         var jwtToken = handler.ReadJwtToken(result.Data.Token);
 
-        var claims = new List<Claim>();
-        foreach (var claim in jwtToken.Claims)
-        {
-            claims.Add(new Claim(claim.Type, claim.Value));
-        }
+        var identity = new ClaimsIdentity(  // Create Identity using JWT Claims
+            jwtToken.Claims,
+            CookieAuthenticationDefaults.AuthenticationScheme);
 
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties
-        {
-            IsPersistent = true
-        };
-
-        await HttpContext.SignInAsync(
+        await HttpContext.SignInAsync(     // Login user and create Authentication Cookie
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity),
-            authProperties);
+            new ClaimsPrincipal(identity));
 
-        Response.Cookies.Append("JwtToken", result.Data.Token);
-
+        Response.Cookies.Append("JwtToken", result.Data.Token);   // Store JWT Token in Cookie  This token will be used while calling API
         return RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        Response.Cookies.Delete("JwtToken");
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);  // Remove Authentication Cookie
+        Response.Cookies.Delete("JwtToken");  // Remove JWT Cookie
         return RedirectToAction("Login", "Account");
     }
-}
+}

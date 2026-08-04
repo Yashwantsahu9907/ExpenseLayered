@@ -5,42 +5,57 @@ namespace ExpenseLayeredMVC.Services;
 
 public class IncomeApiService : BaseApiService
 {
-    public IncomeApiService(HttpClient httpClient, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-        : base(httpClient, configuration, httpContextAccessor)
+    // Constructor
+    public IncomeApiService(HttpClient httpClient, IConfiguration configuration,
+        IHttpContextAccessor httpContextAccessor) : base(httpClient, configuration, httpContextAccessor)
     {
     }
 
-    public async Task<ResponseResult<List<IncomeDto>>?> GetAllIncomesAsync()
+    // Get All Incomes
+    public async Task<ResponseResult<List<IncomeDto>>> GetAllIncomesAsync()
     {
         AddAuthorizationHeader();
-        // The API controller expects GetAllIncome(int id) but ignores it, we pass ?id=0
-        return await _httpClient.GetFromJsonAsync<ResponseResult<List<IncomeDto>>>($"{_baseUrl}Income/GetAllIncome?id=0");
+        // API expects an id parameter, so we send id = 0
+        var result = await _httpClient.GetFromJsonAsync<ResponseResult<List<IncomeDto>>>(_baseUrl + "Income/GetAllIncome?id=0");
+        return result;
     }
 
-    public async Task<ResponseResult<IncomeDto>?> GetIncomeByIdAsync(int id)
+    // Get Income By Id
+    public async Task<ResponseResult<IncomeDto>> GetIncomeByIdAsync(int id)
     {
         AddAuthorizationHeader();
-        return await _httpClient.GetFromJsonAsync<ResponseResult<IncomeDto>>($"{_baseUrl}Income/GetIncomeById/{id}");
+        var result = await _httpClient.GetFromJsonAsync<ResponseResult<IncomeDto>>(
+            _baseUrl + "Income/GetIncomeById/" + id);
+        return result;
     }
 
-    public async Task<ResponseResult<IncomeDto>?> CreateIncomeAsync(IncomeDto dto)
+    // Create Income
+    public async Task<ResponseResult<IncomeDto>> CreateIncomeAsync(IncomeDto dto)
     {
         AddAuthorizationHeader();
-        var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Income/CreateIncome", dto);
-        return await response.Content.ReadFromJsonAsync<ResponseResult<IncomeDto>>();
+        var response = await _httpClient.PostAsJsonAsync(
+            _baseUrl + "Income/CreateIncome", dto);
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<IncomeDto>>();
+        return result;
     }
 
-    public async Task<ResponseResult<IncomeUpdateDto>?> UpdateIncomeAsync(IncomeUpdateDto dto)
+    // Update Income
+    public async Task<ResponseResult<IncomeUpdateDto>> UpdateIncomeAsync(IncomeUpdateDto dto)
     {
         AddAuthorizationHeader();
-        var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}Income/UpdateIncome", dto);
-        return await response.Content.ReadFromJsonAsync<ResponseResult<IncomeUpdateDto>>();
+        var response = await _httpClient.PutAsJsonAsync(
+            _baseUrl + "Income/UpdateIncome", dto);
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<IncomeUpdateDto>>();
+        return result;
     }
 
-    public async Task<ResponseResult<bool>?> DeleteIncomeAsync(int id)
+    // Delete Income
+    public async Task<ResponseResult<bool>> DeleteIncomeAsync(int id)
     {
         AddAuthorizationHeader();
-        var response = await _httpClient.DeleteAsync($"{_baseUrl}Income/DeleteIncome/{id}");
-        return await response.Content.ReadFromJsonAsync<ResponseResult<bool>>();
+        var response = await _httpClient.DeleteAsync(
+            _baseUrl + "Income/DeleteIncome/" + id);
+        var result = await response.Content.ReadFromJsonAsync<ResponseResult<bool>>();
+        return result;
     }
 }
