@@ -74,7 +74,7 @@ public class ExpenseService : IExpenseService
                 };
             }
             // Check existance of category
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && !x.IsDeleted);
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && x.UserId == userId && !x.IsDeleted);
             if (category == null)
             {
                 return new ResponseResult<ExpenseUpdateDto>

@@ -9,7 +9,7 @@ namespace ExpenseLayeredApi.Services;
 
 public class IncomeService : IIncomeService
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context;  //Db Obj
     public IncomeService(AppDbContext context)
     {
         _context = context;
@@ -72,7 +72,6 @@ public class IncomeService : IIncomeService
                     Message = "Income Not Found"
                 };
             }
-            income.Id = dto.Id;
             income.Title = dto.Title;
             income.Amount = dto.Amount;
             income.IncomeDate = dto.IncomeDate;
@@ -177,7 +176,7 @@ public class IncomeService : IIncomeService
     }
 
     // Get All Income
-    public async Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int id, int userId)
+    public async Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int userId)
     {
         try
         {

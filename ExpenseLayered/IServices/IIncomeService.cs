@@ -9,6 +9,6 @@ namespace ExpenseLayeredApi.IServices
         Task<ResponseResult<IncomeUpdateDto>> UpdateIncome(IncomeUpdateDto dto, int userId);
         Task<ResponseResult<bool>> DeleteIncome(int id, int userId);
         Task<ResponseResult<IncomeDto>> GetIncomeById(int id, int userId);
-        Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int id, int userId);
+        Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int userId);
     }
 }

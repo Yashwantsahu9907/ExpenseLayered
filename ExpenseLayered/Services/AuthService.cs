@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.Data;
+using ExpenseLayeredApi.Data;
 using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.Entities;
 using ExpenseLayeredApi.GenericResponse;
@@ -87,7 +87,7 @@ public class AuthService : IAuthService
     // JWT Authentication
     private string GetJwtToken(User user)
     {
-        var claims = new[]
+        var claims = new[]  // Array(implicity type)
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),

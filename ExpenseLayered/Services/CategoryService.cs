@@ -100,12 +100,34 @@ public class CategoryService : ICategoryService
                 {
                     StatusCode = 404,
                     IsSuccess = false,
-                    Message = "User not found"
+                    Message = "Category not found"
                 };
             }
+               
+            if(category.Name != dto.Name)
+            {
+                var existingCategory = await _context.Categories.FirstOrDefaultAsync(x =>
+                x.UserId == userId && x.Name.ToLower() == dto.Name.ToLower() && !x.IsDeleted);
+                if (existingCategory != null)
+                {
+                    return ResponseResult<CategoryUpdateDto>.Conflict("Category already exists.");
+                }
+            }
+            
+            //var existingCategory = await _context.Categories.FirstOrDefaultAsync(x => x.UserId == userId && x.Name == dto.Name && x.Id != dto.Id && !x.IsDeleted);
+            //if (existingCategory != null)
+            //{
+            //    return new ResponseResult<CategoryUpdateDto>
+            //    {
+            //        StatusCode = 409,
+            //        IsSuccess = false,
+            //        Message = "Category already exists."
+            //    };
+            //}
             category.Name = dto.Name; // update category
             category.UpdatedAt = DateTime.UtcNow;
             category.UpdatedBy = userId;
+
             await _context.SaveChangesAsync();
             return new ResponseResult<CategoryUpdateDto>
             {

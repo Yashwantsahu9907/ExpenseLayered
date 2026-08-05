@@ -84,7 +84,7 @@ public class IncomeController : ControllerBase
             return Unauthorized("userId claim not found");
         }
         int userId = int.Parse(userIdClaim.Value);
-        var result = await _incomeService.GetAllIncome(id, userId);
+        var result = await _incomeService.GetAllIncome( userId);
         return Ok(result);
     }
 
