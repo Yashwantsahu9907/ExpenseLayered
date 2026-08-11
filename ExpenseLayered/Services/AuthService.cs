@@ -1,8 +1,9 @@
 using ExpenseLayeredApi.Data;
 using ExpenseLayeredApi.DTO;
-using ExpenseLayeredApi.Entities;
+using ExpenseLayeredApi.Entities.Identity;
 using ExpenseLayeredApi.GenericResponse;
 using ExpenseLayeredApi.IServices;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,10 +14,12 @@ namespace ExpenseLayeredApi.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly AppDbContext _context;
-    public AuthService(AppDbContext context)
+    private readonly UserManager<User> _userManager;
+    private readonly IConfiguration _configuration;
+    public AuthService(UserManager<User> userManager, IConfiguration configuration  )
     {
-        _context = context;
+        _userManager = userManager;
+        _configuration = configuration;
     }
 
     public async Task<ResponseResult<LoginResponseDto>> LoginUser(LoginDto dto)
@@ -34,7 +37,7 @@ public class AuthService : IAuthService
                 };
             }
             // Check user by email 
-            var existingUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var existingUser = await _userManager.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (existingUser == null)
             {
                 return new ResponseResult<LoginResponseDto>
@@ -45,7 +48,8 @@ public class AuthService : IAuthService
                     Data = null
                 };
             }
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, existingUser.Password);
+            // check password using identity
+            var isPasswordValid = await _userManager.CheckPasswordAsync(existingUser, dto.Password);
             if(!isPasswordValid)
             {
                 return new ResponseResult<LoginResponseDto>
@@ -93,7 +97,7 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Email, user.Email),
         };
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("XFkfUQSsuasKXf9du1j6ulBeRELYTz2AmE5HVgnbXohflPZPIQGtzQAnmoaKMsIV"));
+            Encoding.UTF8.GetBytes(_configuration["JWT:Key"]!));
 
         var credentials = new SigningCredentials(
             key,
@@ -115,7 +119,18 @@ public class AuthService : IAuthService
     {
         try
         {
-            var existing = await _context.Users.AnyAsync(x => x.Email == dto.Email);
+            if(dto == null)
+            {
+                return new ResponseResult<User>
+                {
+                    StatusCode = 400,
+                    IsSuccess=false,
+                    Message = "Fill All the details",
+                    Data= null
+                };
+
+            }
+            var existing = await _userManager.Users.AnyAsync(x => x.Email == dto.Email);
             if(existing)
             {
                 return new ResponseResult<User>
@@ -126,19 +141,40 @@ public class AuthService : IAuthService
                     Data = null
                 };
             }
-           await _context.AddAsync(new User
+
+            // create user Object
+            var user = new User
             {
-                Name = dto.Name,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
                 Email = dto.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Gender = dto.Gender,
+                UserName = dto.Email,
                 CreatedAt = DateTime.UtcNow,
-            });
-            await _context.SaveChangesAsync();
+                UpdatedAt = DateTime.UtcNow,
+            };
+            
+            // Identity yaha User Create kar raha hai aur password hash kar raha hai 
+            var result = await _userManager.CreateAsync(user, dto.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+
+                return new ResponseResult<User>
+                {
+                    StatusCode = 400,
+                    IsSuccess = false,
+                    Message = errors,
+                    Data = null
+                };
+            }
+
             return new ResponseResult<User>
             {
                 StatusCode = 200,
                 IsSuccess = true,
-                Message = "Register successfully",
+                Message = "Register Successfully",
+                Data = null
             };
         }
         catch (Exception)

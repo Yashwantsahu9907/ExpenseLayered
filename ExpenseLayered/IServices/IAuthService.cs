@@ -1,5 +1,5 @@
 ﻿using ExpenseLayeredApi.DTO;
-using ExpenseLayeredApi.Entities;
+using ExpenseLayeredApi.Entities.Identity;
 using ExpenseLayeredApi.GenericResponse;
 
 namespace ExpenseLayeredApi.IServices

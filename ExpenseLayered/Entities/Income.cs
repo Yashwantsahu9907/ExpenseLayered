@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using ExpenseLayeredApi.Entities.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExpenseLayeredApi.Entities
 {
