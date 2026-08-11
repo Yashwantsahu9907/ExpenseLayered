@@ -10,31 +10,38 @@ namespace ExpenseLayeredApi.Services;
 public class CategoryService : ICategoryService
 {
     private readonly AppDbContext _context;
+
     public CategoryService(AppDbContext context)
     {
         _context = context;
     }
 
     //Create category
-    public async Task<ResponseResult<CategoryDto>> CreateCategory(CategoryDto dto,int UserId)
+    public async Task<ResponseResult<CategoryDto>> CreateCategory(CategoryDto dto, int userId)
     {
         try
         {
             // Check if same category already exists for same user
             var existingCategory = await _context.Categories.FirstOrDefaultAsync(x =>
-        x.UserId == UserId && x.Name.ToLower() == dto.Name.ToLower() && !x.IsDeleted);
+                x.UserId == userId && x.Name.ToLower() == dto.Name.ToLower() && !x.IsDeleted);
+
             if (existingCategory != null)
             {
-                return ResponseResult<CategoryDto>.Conflict("Category already exists.");
+                return ResponseResult<CategoryDto>.Conflict(
+                    "Category already exists.");
             }
+
             var category = new Category
             {
                 Name = dto.Name,
-                UserId = UserId,
+                UserId = userId,
                 CreatedAt = DateTime.UtcNow
             };
+
             _context.Categories.Add(category);
+
             await _context.SaveChangesAsync();
+
             return new ResponseResult<CategoryDto>
             {
                 StatusCode = 201,
@@ -44,10 +51,11 @@ public class CategoryService : ICategoryService
                 {
                     Id = category.Id,
                     Name = category.Name,
+                    UserId = category.UserId
                 }
             };
         }
-        catch(Exception)
+        catch (Exception)
         {
             return new ResponseResult<CategoryDto>
             {
@@ -58,17 +66,27 @@ public class CategoryService : ICategoryService
         }
     }
 
+
     //Get all categories
-    public async Task<ResponseResult<List<CategoryDto>>>  GetAllCategory(int userId)
+    public async Task<ResponseResult<List<CategoryDto>>> GetAllCategory(int? userId)
     {
         try
         {
-            var categories = await _context.Categories.Where(x => x.UserId == userId && !x.IsDeleted).AsNoTracking()
-            .Select(x => new CategoryDto
+            var query = _context.Categories.Where(x => !x.IsDeleted).AsNoTracking();
+            // UserId present hai  sirf us user ka data
+            // UserId null hai sab users ka data
+            if (userId.HasValue)
             {
-                Id = x.Id,
-                Name = x.Name
-            }).ToListAsync();
+                query = query.Where(x => x.UserId == userId.Value);
+            }
+
+            var categories = await query.Select(x => new CategoryDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    UserId = x.UserId
+                }).ToListAsync();
+
             return new ResponseResult<List<CategoryDto>>
             {
                 StatusCode = 200,
@@ -88,13 +106,17 @@ public class CategoryService : ICategoryService
         }
     }
 
+
     // Update category 
-    public async Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int userId)
+    public async Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int targetUserId,
+        int updatedBy)
     {
         try
         {
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.Id && x.UserId == userId && !x.IsDeleted);
-            if(category == null)
+            var category = await _context.Categories.FirstOrDefaultAsync(x =>
+                x.Id == dto.Id && x.UserId == targetUserId && !x.IsDeleted);
+
+            if (category == null)
             {
                 return new ResponseResult<CategoryUpdateDto>
                 {
@@ -103,17 +125,20 @@ public class CategoryService : ICategoryService
                     Message = "Category not found"
                 };
             }
-               
-            if(category.Name != dto.Name)
+
+            if (category.Name != dto.Name)
             {
                 var existingCategory = await _context.Categories.FirstOrDefaultAsync(x =>
-                x.UserId == userId && x.Name.ToLower() == dto.Name.ToLower() && !x.IsDeleted);
+                    x.UserId == targetUserId && x.Name.ToLower() == dto.Name.ToLower() &&
+                    x.Id != dto.Id && !x.IsDeleted);
+
                 if (existingCategory != null)
                 {
-                    return ResponseResult<CategoryUpdateDto>.Conflict("Category already exists.");
+                    return ResponseResult<CategoryUpdateDto>.Conflict(
+                        "Category already exists.");
                 }
             }
-            
+
             //var existingCategory = await _context.Categories.FirstOrDefaultAsync(x => x.UserId == userId && x.Name == dto.Name && x.Id != dto.Id && !x.IsDeleted);
             //if (existingCategory != null)
             //{
@@ -124,11 +149,13 @@ public class CategoryService : ICategoryService
             //        Message = "Category already exists."
             //    };
             //}
+
             category.Name = dto.Name; // update category
             category.UpdatedAt = DateTime.UtcNow;
-            category.UpdatedBy = userId;
+            category.UpdatedBy = updatedBy;
 
             await _context.SaveChangesAsync();
+
             return new ResponseResult<CategoryUpdateDto>
             {
                 StatusCode = 200,
@@ -137,13 +164,11 @@ public class CategoryService : ICategoryService
                 Data = new CategoryUpdateDto
                 {
                     Id = category.Id,
-                    Name = category.Name,
-                    UpdatedAt = DateTime.UtcNow,
-                    UpdatedBy = userId
+                    Name = category.Name
                 }
             };
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new ResponseResult<CategoryUpdateDto>
             {
@@ -154,13 +179,16 @@ public class CategoryService : ICategoryService
         }
     }
 
+
     // Delete Category
-    public async Task<ResponseResult<bool>> DeleteCategory(int id, int userId)
+    public async Task<ResponseResult<bool>> DeleteCategory(int id, int targetUserId, int deletedBy)
     {
         try
         {
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
-            if( category == null )
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == id &&
+                x.UserId == targetUserId && !x.IsDeleted);
+
+            if (category == null)
             {
                 return new ResponseResult<bool>
                 {
@@ -169,18 +197,21 @@ public class CategoryService : ICategoryService
                     Message = "Category not found"
                 };
             }
+
             category.IsDeleted = true;
             category.UpdatedAt = DateTime.UtcNow;
+            category.UpdatedBy = deletedBy;
+
             await _context.SaveChangesAsync();
 
             return new ResponseResult<bool>
             {
                 StatusCode = 200,
                 IsSuccess = true,
-                Message = "Category deleted SuccessFully"
+                Message = "Category deleted Successfully"
             };
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new ResponseResult<bool>
             {
@@ -191,13 +222,25 @@ public class CategoryService : ICategoryService
         }
     }
 
+
     //Get category by id
-    public async Task<ResponseResult<CategoryDto>> GetCategoryById(int id, int userId)
+    public async Task<ResponseResult<CategoryDto>> GetCategoryById(int id, int? userId)
     {
         try
         {
-            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id==id && x.UserId==userId && !x.IsDeleted);
-            if(category == null )
+            var query = _context.Categories.AsNoTracking()
+                .Where(x => x.Id == id && !x.IsDeleted);
+
+            // UserId present hai  sirf us user ki category
+            // UserId null hai  kisi bhi user ki category
+            if (userId.HasValue)
+            {
+                query = query.Where(x => x.UserId == userId.Value);
+            }
+
+            var category = await query.FirstOrDefaultAsync();
+
+            if (category == null)
             {
                 return new ResponseResult<CategoryDto>
                 {
@@ -206,6 +249,7 @@ public class CategoryService : ICategoryService
                     Message = "Category Not Found"
                 };
             }
+
             return new ResponseResult<CategoryDto>
             {
                 StatusCode = 200,
@@ -213,12 +257,13 @@ public class CategoryService : ICategoryService
                 Message = "Category Found Successfully",
                 Data = new CategoryDto
                 {
-                    Id = id,
+                    Id = category.Id,
                     Name = category.Name,
+                    UserId = category.UserId
                 }
             };
         }
-        catch( Exception ex )
+        catch (Exception ex)
         {
             return new ResponseResult<CategoryDto>
             {

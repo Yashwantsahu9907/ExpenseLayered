@@ -70,8 +70,15 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IIncomeService, IncomeService>();
 
-
+//Seed 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var userManager = services.GetRequiredService<UserManager<User>>();  // agar service nhi mili to app crash ho jayega 
+    var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
+    await Seed.SeedDataAsync(userManager, roleManager, builder.Configuration); // call seed data
+}
 
 
 // Configure the HTTP request pipeline.

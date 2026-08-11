@@ -1,3 +1,4 @@
+using ExpenseLayeredApi.Constant;
 using ExpenseLayeredApi.Data;
 using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.Entities.Identity;
@@ -61,7 +62,7 @@ public class AuthService : IAuthService
                 };
             }
             // Generate Jwt Token
-            var token = GetJwtToken(existingUser);
+            var token = await GetJwtToken(existingUser);
             return new ResponseResult<LoginResponseDto>
             {
                 StatusCode = 200,
@@ -89,12 +90,14 @@ public class AuthService : IAuthService
 
 
     // JWT Authentication
-    private string GetJwtToken(User user)
+    private async Task<string> GetJwtToken(User user)
     {
+        var roles = await _userManager.GetRolesAsync(user);
         var claims = new[]  // Array(implicity type)
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? "")
         };
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["JWT:Key"]!));
@@ -104,8 +107,8 @@ public class AuthService : IAuthService
             SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: "ExpenseApi",
-            audience: "ExpenseUser",
+            issuer: _configuration["JWT:Issuer"],
+            audience: _configuration["JWT:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(30),
             signingCredentials: credentials
@@ -168,7 +171,19 @@ public class AuthService : IAuthService
                     Data = null
                 };
             }
-
+            //assign default user role
+            var roleResult = await _userManager.AddToRoleAsync(user, RoleConstant.User);
+            if(!roleResult.Succeeded)
+            {
+                var errors = string.Join(",", result.Errors.Select(e => e.Description));
+                return new ResponseResult<User>
+                {
+                    StatusCode = 500,
+                    IsSuccess = false,
+                    Message = errors,
+                    Data = null
+                };
+            }
             return new ResponseResult<User>
             {
                 StatusCode = 200,
@@ -176,6 +191,7 @@ public class AuthService : IAuthService
                 Message = "Register Successfully",
                 Data = null
             };
+            
         }
         catch (Exception)
         {

@@ -1,7 +1,6 @@
 ﻿using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.IServices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -17,21 +16,41 @@ public class CategoryController : ControllerBase
         _categoryService = categoryService;
     }
 
-    [Authorize]
+
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpPost("CreateCategory")]
     public async Task<IActionResult> CreateCategory([FromBody] CategoryDto dto)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token match and stor
-        if(userIdClaim == null)
+
+        if (userIdClaim == null)
         {
             return Unauthorized("UserId Claim not found");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _categoryService.CreateCategory(dto, userId);
+
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+
+        int targetUserId;
+        // Admin and SuperAdmin can create category for any user
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (!dto.UserId.HasValue)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+            targetUserId = dto.UserId.Value;
+        }
+        else
+        {
+            targetUserId = loggedInUserId;
+        }
+
+        var result = await _categoryService.CreateCategory(dto, targetUserId);
         return Ok(result);
     }
 
-    [Authorize]
+
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpGet("GetCategory")]
     public async Task<IActionResult> GetAllCategory()
     {
@@ -41,49 +60,106 @@ public class CategoryController : ControllerBase
             return Unauthorized("UserId claim not found.");
         }
         int userId = int.Parse(userIdClaim.Value);
-        var result = await _categoryService.GetAllCategory(userId);
-        return Ok(result);
+
+        // Admin and SuperAdmin can see all users categories
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            var result = await _categoryService.GetAllCategory(null);
+            return Ok(result);
+        }
+        var userResult = await _categoryService.GetAllCategory(userId);
+        return Ok(userResult);
     }
 
-    [Authorize]
+
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpPut("CategoryUpdate")]
-    public async Task<IActionResult> UpdateCategory([FromBody]CategoryUpdateDto dto)
+    public async Task<IActionResult> UpdateCategory([FromBody] CategoryUpdateDto dto)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _categoryService.UpdateCategory(dto, userId);
+
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        int targetUserId;
+
+        // Admin and SuperAdmin can update any user category
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (!dto.UserId.HasValue)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+            targetUserId = dto.UserId.Value;
+        }
+        else
+        {
+            targetUserId = loggedInUserId;
+        }
+        var result = await _categoryService.UpdateCategory(dto, targetUserId, loggedInUserId);
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpDelete("DeleteCategory/{id}")]
-    public async Task<IActionResult> DeleteCategory(int id)
+
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
+    [HttpDelete("DeleteCategory/{id}/{targetUserId?}")]
+    public async Task<IActionResult> DeleteCategory(int id, int? targetUserId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _categoryService.DeleteCategory(id, userId);
+
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        int categoryUserId;
+        // Admin and SuperAdmin can delete any user category
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (!targetUserId.HasValue)
+            {
+                return BadRequest("Target UserId is required for Admin or SuperAdmin.");
+            }
+
+            categoryUserId = targetUserId.Value;
+        }
+        else
+        {
+            categoryUserId = loggedInUserId;
+        }
+
+        var result = await _categoryService.DeleteCategory(id, categoryUserId, loggedInUserId);
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpGet("GetCategoryById/{id}")]
-    public async Task<IActionResult> GetCategoryById(int id)
+
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
+    [HttpGet("GetCategoryById/{id}/{targetUserId?}")]
+    public async Task<IActionResult> GetCategoryById(int id, int? targetUserId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _categoryService.GetCategoryById(id, userId);
+
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+
+        int? categoryUserId;
+
+        // Admin and SuperAdmin can see any user's category
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            categoryUserId = targetUserId;
+        }
+        else
+        {
+            categoryUserId = loggedInUserId;
+        }
+        var result = await _categoryService.GetCategoryById(id, categoryUserId);
         return Ok(result);
     }
 }

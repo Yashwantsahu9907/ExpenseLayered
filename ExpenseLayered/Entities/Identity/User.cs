@@ -9,5 +9,6 @@ namespace ExpenseLayeredApi.Entities.Identity
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public string Gender { get; set; }
+        public ICollection<AppUserRole> UserRoles { get; set; }  // one user has multiple role
     }
 }
