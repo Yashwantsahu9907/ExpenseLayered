@@ -58,11 +58,11 @@ public class IncomeService : IIncomeService
     }
 
     // Update Income
-    public async Task<ResponseResult<IncomeUpdateDto>> UpdateIncome(IncomeUpdateDto dto, int userId)
+    public async Task<ResponseResult<IncomeUpdateDto>> UpdateIncome(IncomeUpdateDto dto, int targetUserId, int updatedBy)
     {
         try
         {
-            var income = await _context.Incomes.FirstOrDefaultAsync(x =>  x.UserId == userId && x.Id == dto.Id && !x.IsDeleted);
+            var income = await _context.Incomes.FirstOrDefaultAsync(x =>  x.UserId == targetUserId && x.Id == dto.Id && !x.IsDeleted);
             if(income == null)
             {
                 return new ResponseResult<IncomeUpdateDto>
@@ -76,7 +76,7 @@ public class IncomeService : IIncomeService
             income.Amount = dto.Amount;
             income.IncomeDate = dto.IncomeDate;
             income.UpdatedAt = DateTime.UtcNow;
-            income.UpdatedBy = userId;
+            income.UpdatedBy = updatedBy;
             await _context.SaveChangesAsync();
             return new ResponseResult<IncomeUpdateDto>
             {
@@ -98,11 +98,11 @@ public class IncomeService : IIncomeService
     }
 
     // Delete Income
-    public async Task<ResponseResult<bool>> DeleteIncome(int id, int userId)
+    public async Task<ResponseResult<bool>> DeleteIncome(int id, int targetUserId, int deletedBy)
     {
         try
         {
-            var income = await _context.Incomes.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            var income = await _context.Incomes.FirstOrDefaultAsync(x => x.Id == id && x.UserId == targetUserId && !x.IsDeleted);
             if (income == null)
             {
                 return new ResponseResult<bool>
@@ -114,7 +114,7 @@ public class IncomeService : IIncomeService
             }
             income.IsDeleted = true;
             income.UpdatedAt = DateTime.UtcNow;
-            income.UpdatedBy = userId;
+            income.UpdatedBy = deletedBy;
             await _context.SaveChangesAsync();
             return new ResponseResult<bool>
             {
@@ -135,11 +135,16 @@ public class IncomeService : IIncomeService
     }
 
     // Get income by id
-    public async Task<ResponseResult<IncomeDto>> GetIncomeById(int id, int userId)
+    public async Task<ResponseResult<IncomeDto>> GetIncomeById(int id, int? userId)
     {
         try
         {
-            var income = _context.Incomes.AsNoTracking().FirstOrDefault(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            var query = _context.Incomes.AsNoTracking().Where(x => x.Id == id && !x.IsDeleted);
+            if (userId.HasValue)
+            {
+                query = query.Where(x => x.UserId == userId.Value);   // If userId is provided, filter by that user
+            }
+            var income = await query.FirstOrDefaultAsync();
             if (income == null)
             {
                 return new ResponseResult<IncomeDto>
@@ -176,18 +181,24 @@ public class IncomeService : IIncomeService
     }
 
     // Get All Income
-    public async Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int userId)
+    public async Task<ResponseResult<List<IncomeDto>>> GetAllIncome(int? userId)
     {
         try
         {
-            var income = await _context.Incomes.Where(x => x.UserId == userId && !x.IsDeleted).AsNoTracking().Select(x => new IncomeDto
+            var query = _context.Incomes.Where(x => !x.IsDeleted);
+            if (userId.HasValue)
             {
-                Id = x.Id,
-                Amount = x.Amount,
-                Title = x.Title,
-                IncomeDate = x.IncomeDate,
-                CreatedAt = x.CreatedAt
-            }).ToListAsync();
+                query = query.Where(x => x.UserId == userId.Value);
+            }
+
+            var income = await query.AsNoTracking().Select(x => new IncomeDto
+                {
+                    Id = x.Id,
+                    Amount = x.Amount,
+                    Title = x.Title,
+                    IncomeDate = x.IncomeDate,
+                    CreatedAt = x.CreatedAt
+                }).ToListAsync();
             if (!income.Any())
             {
                 return new ResponseResult<List<IncomeDto>>

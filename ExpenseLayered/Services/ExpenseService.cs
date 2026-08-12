@@ -20,6 +20,17 @@ public class ExpenseService : IExpenseService
     {
         try
         {
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && x.UserId == userId && !x.IsDeleted);
+            if (category == null)
+            {
+                return new ResponseResult<ExpenseDto>
+                {
+                    StatusCode = 404,
+                    IsSuccess = false,
+                    Message = "Category not found for this user."
+                };  
+            }
+                
             var expense = new Expense
             {
                 Title = dto.Title,
@@ -59,11 +70,11 @@ public class ExpenseService : IExpenseService
     }
 
     //Update Expense
-    public async Task<ResponseResult<ExpenseUpdateDto>> UpdateExpense(ExpenseUpdateDto dto, int userId)
+    public async Task<ResponseResult<ExpenseUpdateDto>> UpdateExpense(ExpenseUpdateDto dto, int targetUserId, int updatedBy)
     {
         try
         {
-            var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == dto.Id && x.UserId == userId && !x.IsDeleted);
+            var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == dto.Id && x.UserId == targetUserId && !x.IsDeleted);
             if (expense == null)
             {
                 return new ResponseResult<ExpenseUpdateDto>
@@ -74,7 +85,7 @@ public class ExpenseService : IExpenseService
                 };
             }
             // Check existance of category
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && x.UserId == userId && !x.IsDeleted);
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && x.UserId == targetUserId && !x.IsDeleted);
             if (category == null)
             {
                 return new ResponseResult<ExpenseUpdateDto>
@@ -89,7 +100,7 @@ public class ExpenseService : IExpenseService
             expense.Description = dto.Description;
             expense.CategoryId = dto.CategoryId;
             expense.UpdatedAt = DateTime.UtcNow;
-            expense.UpdatedBy = userId;
+            expense.UpdatedBy = updatedBy;
 
             await _context.SaveChangesAsync();
             return new ResponseResult<ExpenseUpdateDto>
@@ -97,7 +108,14 @@ public class ExpenseService : IExpenseService
                 StatusCode = 200,
                 IsSuccess = true,
                 Message = "Expence Updated Successfully",
-                Data = dto
+                Data = new ExpenseUpdateDto
+                {
+                    Id = expense.Id,
+                    Title = expense.Title,
+                    Amount = expense.Amount,
+                    Description = expense.Description,
+                    CategoryId = expense.CategoryId,
+                }
             };
         }
         catch (Exception ex)
@@ -112,11 +130,11 @@ public class ExpenseService : IExpenseService
     }
 
     // Delete Expense
-    public async Task<ResponseResult<bool>> DeleteExpense(int id, int userId)
+    public async Task<ResponseResult<bool>> DeleteExpense(int id, int targetUserId, int deletedBy)
     {
         try
         {
-            var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == id && x.UserId == targetUserId && !x.IsDeleted);
             if (expense == null)
             {
                 return new ResponseResult<bool>
@@ -128,6 +146,7 @@ public class ExpenseService : IExpenseService
             }
             expense.IsDeleted = true;
             expense.UpdatedAt = DateTime.UtcNow;
+            expense.UpdatedBy = deletedBy;
             await _context.SaveChangesAsync();
 
             return new ResponseResult<bool>
@@ -150,11 +169,16 @@ public class ExpenseService : IExpenseService
     }
 
     // Get Expense by Id
-    public async Task<ResponseResult<ExpenseDto>> GetExpenceById(int id, int userId)
+    public async Task<ResponseResult<ExpenseDto>> GetExpenceById(int id, int? userId)
     {
         try
         {
-            var expence = await _context.Expenses.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
+            var query = _context.Expenses.AsNoTracking().Where(x => x.Id == id && !x.IsDeleted);
+            if (userId.HasValue)
+            {
+                query = query.Where(x => x.UserId == userId.Value);
+            }
+            var expence = await query.FirstOrDefaultAsync();
             if (expence == null)
             {
                 return new ResponseResult<ExpenseDto>
@@ -192,11 +216,16 @@ public class ExpenseService : IExpenseService
 
 
     // Get all Expense
-    public async Task<ResponseResult<List<ExpenseDto>>> GetAllExpence(int userId)  
+    public async Task<ResponseResult<List<ExpenseDto>>> GetAllExpence(int? userId)  
     {
         try
         {
-            var expense = await _context.Expenses.Where(x => x.UserId == userId && !x.IsDeleted).AsNoTracking().Select(x => new ExpenseDto
+            var query = _context.Expenses.Where(x => !x.IsDeleted);
+            if (userId.HasValue)
+            {
+                query = query.AsNoTracking().Where(x => x.UserId == userId.Value);
+            }
+            var expense = await query.Select(x => new ExpenseDto
             {
                 Id = x.Id,
                 Amount = x.Amount,

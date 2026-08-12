@@ -1,4 +1,5 @@
 ﻿using ExpenseLayeredApi.DTO;
+using ExpenseLayeredApi.Entities.Identity;
 using ExpenseLayeredApi.IServices;
 using ExpenseLayeredApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -20,73 +21,132 @@ public class ExpenseController : ControllerBase
         _expenseService = expenseService;
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpPost("CreateExpense")]
-    public async Task<IActionResult> CreateExpense([FromBody]ExpenseDto dto)
+    public async Task<IActionResult> CreateExpense([FromBody]ExpenseDto dto , int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token match and store
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _expenseService.CreateExpense(dto, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");   
+            }
+        }
+        var result = await _expenseService.CreateExpense(dto, userId.Value);
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpPut("UpdateExpense")]
-    public async Task<IActionResult> UpdateExpense([FromBody]ExpenseUpdateDto dto)
+    public async Task<IActionResult> UpdateExpense([FromBody]ExpenseUpdateDto dto, int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _expenseService.UpdateExpense(dto, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        // Normal User can update only his own expense
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _expenseService.UpdateExpense(dto, userId.Value,loggedInUserId);
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpDelete("DeleteExpense/{id}")]
-    public async Task<IActionResult> DeleteExpense(int id)
+    public async Task<IActionResult> DeleteExpense(int id, int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _expenseService.DeleteExpense(id, userId);
+
+
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _expenseService.DeleteExpense(id, userId.Value, loggedInUserId);
         return Ok(result);
     }
 
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpGet("GetExpenseById/{id}")]
-    public async Task<IActionResult> GetExpenseById(int id)
+    public async Task<IActionResult> GetExpenseById(int id, int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _expenseService.GetExpenceById(id, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _expenseService.GetExpenceById(id, userId.Value);
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpGet("GetAllExpense")]
-    public async Task<IActionResult> GetAllExpence()
+    public async Task<IActionResult> GetAllExpence(int ? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
         }
-        int userId = int.Parse(userIdClaim.Value);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            userId = null;
+        }
         var result = await _expenseService.GetAllExpence(userId);
         return Ok(result);
     }

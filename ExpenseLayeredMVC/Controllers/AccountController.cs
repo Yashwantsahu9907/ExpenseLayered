@@ -50,12 +50,15 @@ public class AccountController : Controller
         {
             return View(dto);
         }
+
         var result = await _authApiService.LoginUser(dto);
+
         if (result == null || !result.IsSuccess)
         {
             ViewBag.Error = "Invalid Email or Password";
             return View(dto);
         }
+
         var handler = new JwtSecurityTokenHandler();  // Read JWT Token
         var jwtToken = handler.ReadJwtToken(result.Data.Token);
 
@@ -67,7 +70,20 @@ public class AccountController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity));
 
-        Response.Cookies.Append("JwtToken", result.Data.Token);   // Store JWT Token in Cookie  This token will be used while calling API
+        Response.Cookies.Append("JwtToken", result.Data.Token); // Store JWT Token in Cookie // This token will be used while calling API
+        // Get role directly from JWT Token
+        var role = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        // Redirect according to role
+        if (role == "SuperAdmin")
+        {
+            return RedirectToAction("Dashboard", "SuperAdmin");
+        }
+
+        if (role == "Admin")
+        {
+            return RedirectToAction("Dashboard", "Admin");
+        }
+
         return RedirectToAction("Index", "Home");
     }
 

@@ -21,7 +21,7 @@ public class CategoryController : ControllerBase
     [HttpPost("CreateCategory")]
     public async Task<IActionResult> CreateCategory([FromBody] CategoryDto dto)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token match and stor
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token ko  match and stor
 
         if (userIdClaim == null)
         {

@@ -17,73 +17,128 @@ public class IncomeController : ControllerBase
         _incomeService = incomeService;
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpPost("CreateIncome")]
-    public async Task<IActionResult> CreateIncome([FromBody] IncomeDto dto)
+    public async Task<IActionResult> CreateIncome([FromBody] IncomeDto dto,int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if(userIdClaim == null)
         {
             return Unauthorized("User Claim Not Found");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _incomeService.CreateIncome(dto, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _incomeService.CreateIncome(dto, userId.Value);
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpPut("UpdateIncome")]
-    public async Task<IActionResult> UpdateIncome([FromBody] IncomeUpdateDto dto)
+    public async Task<IActionResult> UpdateIncome([FromBody] IncomeUpdateDto dto,int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if( userIdClaim == null)
         {
             return Unauthorized("User Clain not found");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _incomeService.UpdateIncome(dto, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _incomeService.UpdateIncome(dto, userId.Value,loggedInUserId);
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpDelete("DeleteIncome/{id}")]
-    public async Task<IActionResult> DeleteIncome(int id)
+    public async Task<IActionResult> DeleteIncome(int id,int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("userId claim not found");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _incomeService.DeleteIncome(id, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _incomeService.DeleteIncome(id, userId.Value,loggedInUserId);
         return Ok(result);
     }
 
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpGet("GetIncomeById/{id}")]
-    public async Task<IActionResult> GetIncomeById(int id)
+    public async Task<IActionResult> GetIncomeById(int id, int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("userId claim not found");
         }
-        int userId = int.Parse(userIdClaim.Value);
-        var result = await _incomeService.GetIncomeById(id, userId);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
+        var result = await _incomeService.GetIncomeById(id, userId.Value);
         return Ok(result);
     }
 
-    [Authorize]
+    [Authorize(Roles = "User, Admin, SuperAdmin")]
     [HttpGet("GetAllIncome")]
-    public async Task<IActionResult> GetAllIncome(int id)
+    public async Task<IActionResult> GetAllIncome(int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
             return Unauthorized("userId claim not found");
         }
-        int userId = int.Parse(userIdClaim.Value);
+        int loggedInUserId = int.Parse(userIdClaim.Value);
+        if (User.IsInRole("User"))
+        {
+            userId = loggedInUserId;
+        }
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            if (userId == null)
+            {
+                return BadRequest("UserId is required for Admin or SuperAdmin.");
+            }
+        }
         var result = await _incomeService.GetAllIncome( userId);
         return Ok(result);
     }

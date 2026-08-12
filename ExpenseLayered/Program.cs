@@ -72,7 +72,7 @@ builder.Services.AddScoped<IIncomeService, IncomeService>();
 
 //Seed 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope()) // create scope of DI
 {
     var services = scope.ServiceProvider;
     var userManager = services.GetRequiredService<UserManager<User>>();  // agar service nhi mili to app crash ho jayega 
