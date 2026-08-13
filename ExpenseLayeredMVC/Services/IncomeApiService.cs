@@ -16,7 +16,7 @@ public class IncomeApiService : BaseApiService
     {
         AddAuthorizationHeader();
         // API expects an id parameter, so we send id = 0
-        var result = await _httpClient.GetFromJsonAsync<ResponseResult<List<IncomeDto>>>(_baseUrl + "Income/GetAllIncome?id=0");
+        var result = await _httpClient.GetFromJsonAsync<ResponseResult<List<IncomeDto>>>(_baseUrl + "Income/GetAllIncome");
         return result;
     }
 

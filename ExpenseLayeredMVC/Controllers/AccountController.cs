@@ -24,6 +24,7 @@ public class AccountController : Controller
         return View();
     }
 
+
     [HttpPost]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
@@ -63,26 +64,12 @@ public class AccountController : Controller
         var jwtToken = handler.ReadJwtToken(result.Data.Token);
 
         var identity = new ClaimsIdentity(  // Create Identity using JWT Claims
-            jwtToken.Claims,
-            CookieAuthenticationDefaults.AuthenticationScheme);
+            jwtToken.Claims, CookieAuthenticationDefaults.AuthenticationScheme,ClaimTypes.Name,  ClaimTypes.Role);
 
         await HttpContext.SignInAsync(     // Login user and create Authentication Cookie
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity));
-
-        Response.Cookies.Append("JwtToken", result.Data.Token); // Store JWT Token in Cookie // This token will be used while calling API
-        // Get role directly from JWT Token
-        var role = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-        // Redirect according to role
-        if (role == "SuperAdmin")
-        {
-            return RedirectToAction("Dashboard", "SuperAdmin");
-        }
-
-        if (role == "Admin")
-        {
-            return RedirectToAction("Dashboard", "Admin");
-        }
+        Response.Cookies.Append("JwtToken", result.Data.Token);   // Store JWT Token in Cookie  This token will be used while calling API
 
         return RedirectToAction("Index", "Home");
     }
@@ -94,4 +81,6 @@ public class AccountController : Controller
         Response.Cookies.Delete("JwtToken");  // Remove JWT Cookie
         return RedirectToAction("Login", "Account");
     }
+
+
 }

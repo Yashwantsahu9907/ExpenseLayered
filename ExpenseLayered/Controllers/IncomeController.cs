@@ -123,23 +123,26 @@ public class IncomeController : ControllerBase
     public async Task<IActionResult> GetAllIncome(int? userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
         if (userIdClaim == null)
         {
-            return Unauthorized("userId claim not found");
+            return Unauthorized("UserId claim not found");
         }
+
         int loggedInUserId = int.Parse(userIdClaim.Value);
+
+        // Normal User can see only his own income
         if (User.IsInRole("User"))
         {
             userId = loggedInUserId;
         }
+        // Admin and SuperAdmin can see all incomes
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            userId = null;
         }
-        var result = await _incomeService.GetAllIncome( userId);
+
+        var result = await _incomeService.GetAllIncome(userId);
         return Ok(result);
     }
 

@@ -13,6 +13,7 @@ builder.Services.AddHttpClient<AuthApiService>();
 builder.Services.AddHttpClient<CategoryApiService>();
 builder.Services.AddHttpClient<ExpenseApiService>();
 builder.Services.AddHttpClient<IncomeApiService>();
+builder.Services.AddHttpClient<SuperAdminApiService>();
 
 
 // Cookie Authentication

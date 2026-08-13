@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using ExpenseLayeredMVC.Models;
+using ExpenseLayeredMVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,16 +8,24 @@ namespace ExpenseLayeredMVC.Controllers;
 [Authorize(Roles = "SuperAdmin")]
 public class SuperAdminController : Controller
 {
-    public IActionResult Dashboard()
+    private readonly SuperAdminApiService _apiService;
+
+    public SuperAdminController(SuperAdminApiService apiService)
     {
-        return View();
+        _apiService = apiService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Logout()
+    // Show All Users
+    public async Task<IActionResult> Index()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);  // Remove Authentication Cookie
-        Response.Cookies.Delete("JwtToken");  // Remove JWT Cookie
-        return RedirectToAction("Login", "Account");
+        var result = await _apiService.GetAllUsersAsync();
+
+        if (result == null || !result.IsSuccess)
+        {
+            ViewBag.Error = result?.Message ?? "Unable to get users";
+            return View(new List<UserDto>());
+        }
+
+        return View(result.Data);
     }
 }

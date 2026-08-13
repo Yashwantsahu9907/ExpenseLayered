@@ -72,21 +72,18 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Category" asp-action="Index">Categories</a>
                         </li>
+                        @if (User.IsInRole("SuperAdmin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="SuperAdmin"
+                                   asp-action="Index">
+                                    Users
+                                </a>
+                            </li>
+                        }
                     </ul>
-                    @if (User.IsInRole("SuperAdmin"))
-                    {
-                        <a asp-controller="SuperAdmin"
-                           asp-action="Dashboard">
-                            SuperAdmin Dashboard
-                        </a>
-                    }
-                    else if (User.IsInRole("Admin"))
-                    {
-                        <a asp-controller="Admin"
-                           asp-action="Dashboard">
-                            Admin Dashboard
-                        </a>
-                    }
+                   
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
