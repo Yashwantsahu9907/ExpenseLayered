@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.Data;
+using ExpenseLayeredApi.Data;
 using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.Entities;
 using ExpenseLayeredApi.GenericResponse;
@@ -58,11 +58,16 @@ public class IncomeService : IIncomeService
     }
 
     // Update Income
-    public async Task<ResponseResult<IncomeUpdateDto>> UpdateIncome(IncomeUpdateDto dto, int targetUserId, int updatedBy)
+    public async Task<ResponseResult<IncomeUpdateDto>> UpdateIncome(IncomeUpdateDto dto, int? targetUserId, int updatedBy)
     {
         try
         {
-            var income = await _context.Incomes.FirstOrDefaultAsync(x =>  x.UserId == targetUserId && x.Id == dto.Id && !x.IsDeleted);
+            var query = _context.Incomes.Where(x => x.Id == dto.Id && !x.IsDeleted);
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(x => x.UserId == targetUserId.Value);
+            }
+            var income = await query.FirstOrDefaultAsync();
             if(income == null)
             {
                 return new ResponseResult<IncomeUpdateDto>
@@ -98,11 +103,16 @@ public class IncomeService : IIncomeService
     }
 
     // Delete Income
-    public async Task<ResponseResult<bool>> DeleteIncome(int id, int targetUserId, int deletedBy)
+    public async Task<ResponseResult<bool>> DeleteIncome(int id, int? targetUserId, int deletedBy)
     {
         try
         {
-            var income = await _context.Incomes.FirstOrDefaultAsync(x => x.Id == id && x.UserId == targetUserId && !x.IsDeleted);
+            var query = _context.Incomes.Where(x => x.Id == id && !x.IsDeleted);
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(x => x.UserId == targetUserId.Value);
+            }
+            var income = await query.FirstOrDefaultAsync();
             if (income == null)
             {
                 return new ResponseResult<bool>

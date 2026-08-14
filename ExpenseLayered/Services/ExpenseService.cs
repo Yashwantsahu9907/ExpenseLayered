@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.Data;
+using ExpenseLayeredApi.Data;
 using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.GenericResponse;
 using ExpenseLayeredApi.Entities;
@@ -70,11 +70,16 @@ public class ExpenseService : IExpenseService
     }
 
     //Update Expense
-    public async Task<ResponseResult<ExpenseUpdateDto>> UpdateExpense(ExpenseUpdateDto dto, int targetUserId, int updatedBy)
+    public async Task<ResponseResult<ExpenseUpdateDto>> UpdateExpense(ExpenseUpdateDto dto, int? targetUserId, int updatedBy)
     {
         try
         {
-            var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == dto.Id && x.UserId == targetUserId && !x.IsDeleted);
+            var query = _context.Expenses.Where(x => x.Id == dto.Id && !x.IsDeleted);
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(x => x.UserId == targetUserId.Value);
+            }
+            var expense = await query.FirstOrDefaultAsync();
             if (expense == null)
             {
                 return new ResponseResult<ExpenseUpdateDto>
@@ -85,7 +90,7 @@ public class ExpenseService : IExpenseService
                 };
             }
             // Check existance of category
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && x.UserId == targetUserId && !x.IsDeleted);
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == dto.CategoryId && x.UserId == expense.UserId && !x.IsDeleted);
             if (category == null)
             {
                 return new ResponseResult<ExpenseUpdateDto>
@@ -130,11 +135,16 @@ public class ExpenseService : IExpenseService
     }
 
     // Delete Expense
-    public async Task<ResponseResult<bool>> DeleteExpense(int id, int targetUserId, int deletedBy)
+    public async Task<ResponseResult<bool>> DeleteExpense(int id, int? targetUserId, int deletedBy)
     {
         try
         {
-            var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == id && x.UserId == targetUserId && !x.IsDeleted);
+            var query = _context.Expenses.Where(x => x.Id == id && !x.IsDeleted);
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(x => x.UserId == targetUserId.Value);
+            }
+            var expense = await query.FirstOrDefaultAsync();
             if (expense == null)
             {
                 return new ResponseResult<bool>

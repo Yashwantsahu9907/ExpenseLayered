@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ExpenseLayeredApi.Data;
 using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.Entities;
@@ -108,13 +108,16 @@ public class CategoryService : ICategoryService
 
 
     // Update category 
-    public async Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int targetUserId,
-        int updatedBy)
+    public async Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int? targetUserId, int updatedBy)
     {
         try
         {
-            var category = await _context.Categories.FirstOrDefaultAsync(x =>
-                x.Id == dto.Id && x.UserId == targetUserId && !x.IsDeleted);
+            var query = _context.Categories.Where(x => x.Id == dto.Id && !x.IsDeleted);
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(x => x.UserId == targetUserId.Value);
+            }
+            var category = await query.FirstOrDefaultAsync();
 
             if (category == null)
             {
@@ -129,7 +132,7 @@ public class CategoryService : ICategoryService
             if (category.Name != dto.Name)
             {
                 var existingCategory = await _context.Categories.FirstOrDefaultAsync(x =>
-                    x.UserId == targetUserId && x.Name.ToLower() == dto.Name.ToLower() &&
+                    x.UserId == category.UserId && x.Name.ToLower() == dto.Name.ToLower() &&
                     x.Id != dto.Id && !x.IsDeleted);
 
                 if (existingCategory != null)
@@ -181,12 +184,16 @@ public class CategoryService : ICategoryService
 
 
     // Delete Category
-    public async Task<ResponseResult<bool>> DeleteCategory(int id, int targetUserId, int deletedBy)
+    public async Task<ResponseResult<bool>> DeleteCategory(int id, int? targetUserId, int deletedBy)
     {
         try
         {
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == id &&
-                x.UserId == targetUserId && !x.IsDeleted);
+            var query = _context.Categories.Where(x => x.Id == id && !x.IsDeleted);
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(x => x.UserId == targetUserId.Value);
+            }
+            var category = await query.FirstOrDefaultAsync();
 
             if (category == null)
             {

@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.DTO;
+using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.Entities.Identity;
 using ExpenseLayeredApi.IServices;
 using ExpenseLayeredApi.Services;
@@ -40,7 +40,7 @@ public class ExpenseController : ControllerBase
         {
             if (userId == null)
             {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");   
+                userId = loggedInUserId;
             }
         }
         var result = await _expenseService.CreateExpense(dto, userId.Value);
@@ -64,12 +64,9 @@ public class ExpenseController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            // Allowed to pass null for targetUserId
         }
-        var result = await _expenseService.UpdateExpense(dto, userId.Value,loggedInUserId);
+        var result = await _expenseService.UpdateExpense(dto, userId, loggedInUserId);
         return Ok(result);
     }
 
@@ -91,12 +88,9 @@ public class ExpenseController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            // Allowed to pass null
         }
-        var result = await _expenseService.DeleteExpense(id, userId.Value, loggedInUserId);
+        var result = await _expenseService.DeleteExpense(id, userId, loggedInUserId);
         return Ok(result);
     }
 
@@ -118,12 +112,9 @@ public class ExpenseController : ControllerBase
 
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            // allowed to pass null
         }
-        var result = await _expenseService.GetExpenceById(id, userId.Value);
+        var result = await _expenseService.GetExpenceById(id, userId);
         return Ok(result);
     }
 

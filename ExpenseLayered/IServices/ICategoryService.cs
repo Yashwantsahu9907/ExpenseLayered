@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.DTO;
+using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.GenericResponse;
 
 namespace ExpenseLayeredApi.IServices
@@ -7,8 +7,8 @@ namespace ExpenseLayeredApi.IServices
     {
         Task<ResponseResult<CategoryDto>> CreateCategory(CategoryDto dto, int userId);
         Task<ResponseResult<List<CategoryDto>>> GetAllCategory(int? userId);
-        Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int targetUserId, int updatedBy);
-        Task<ResponseResult<bool>> DeleteCategory(int id, int targetUserId, int deletedBy);
+        Task<ResponseResult<CategoryUpdateDto>> UpdateCategory(CategoryUpdateDto dto, int? targetUserId, int updatedBy);
+        Task<ResponseResult<bool>> DeleteCategory(int id, int? targetUserId, int deletedBy);
         Task<ResponseResult<CategoryDto>> GetCategoryById(int id, int? userId);
     }
 }

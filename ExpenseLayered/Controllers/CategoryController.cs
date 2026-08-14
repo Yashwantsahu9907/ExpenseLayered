@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.DTO;
+using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,14 +31,10 @@ public class CategoryController : ControllerBase
         int loggedInUserId = int.Parse(userIdClaim.Value);
 
         int targetUserId;
-        // Admin and SuperAdmin can create category for any user
+        // Admin and SuperAdmin can create category for any user or themselves
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (!dto.UserId.HasValue)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
-            targetUserId = dto.UserId.Value;
+            targetUserId = dto.UserId ?? loggedInUserId;
         }
         else
         {
@@ -83,16 +79,12 @@ public class CategoryController : ControllerBase
         }
 
         int loggedInUserId = int.Parse(userIdClaim.Value);
-        int targetUserId;
+        int? targetUserId;
 
         // Admin and SuperAdmin can update any user category
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (!dto.UserId.HasValue)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
-            targetUserId = dto.UserId.Value;
+            targetUserId = dto.UserId;
         }
         else
         {
@@ -115,16 +107,11 @@ public class CategoryController : ControllerBase
         }
 
         int loggedInUserId = int.Parse(userIdClaim.Value);
-        int categoryUserId;
+        int? categoryUserId;
         // Admin and SuperAdmin can delete any user category
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (!targetUserId.HasValue)
-            {
-                return BadRequest("Target UserId is required for Admin or SuperAdmin.");
-            }
-
-            categoryUserId = targetUserId.Value;
+            categoryUserId = targetUserId;
         }
         else
         {

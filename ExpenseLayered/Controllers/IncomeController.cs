@@ -1,4 +1,4 @@
-﻿using ExpenseLayeredApi.DTO;
+using ExpenseLayeredApi.DTO;
 using ExpenseLayeredApi.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +35,7 @@ public class IncomeController : ControllerBase
         {
             if (userId == null)
             {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
+                userId = loggedInUserId;
             }
         }
         var result = await _incomeService.CreateIncome(dto, userId.Value);
@@ -58,12 +58,9 @@ public class IncomeController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            // Allowed to pass null
         }
-        var result = await _incomeService.UpdateIncome(dto, userId.Value,loggedInUserId);
+        var result = await _incomeService.UpdateIncome(dto, userId, loggedInUserId);
         return Ok(result);
     }
 
@@ -83,12 +80,9 @@ public class IncomeController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            // Allowed to pass null
         }
-        var result = await _incomeService.DeleteIncome(id, userId.Value,loggedInUserId);
+        var result = await _incomeService.DeleteIncome(id, userId, loggedInUserId);
         return Ok(result);
     }
 
@@ -109,12 +103,9 @@ public class IncomeController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            if (userId == null)
-            {
-                return BadRequest("UserId is required for Admin or SuperAdmin.");
-            }
+            // allowed to pass null
         }
-        var result = await _incomeService.GetIncomeById(id, userId.Value);
+        var result = await _incomeService.GetIncomeById(id, userId);
         return Ok(result);
     }
 
