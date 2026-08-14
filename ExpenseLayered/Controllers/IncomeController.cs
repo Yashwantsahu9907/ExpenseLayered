@@ -121,13 +121,10 @@ public class IncomeController : ControllerBase
         }
 
         int loggedInUserId = int.Parse(userIdClaim.Value);
-
-        // Normal User can see only his own income
         if (User.IsInRole("User"))
         {
             userId = loggedInUserId;
         }
-        // Admin and SuperAdmin can see all incomes
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
             userId = null;

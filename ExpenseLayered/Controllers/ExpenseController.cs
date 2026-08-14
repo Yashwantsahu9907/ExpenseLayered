@@ -14,8 +14,6 @@ namespace ExpenseLayeredApi.Controllers;
 public class ExpenseController : ControllerBase
 {
     private readonly IExpenseService _expenseService;
-
-    // Constructor Injection
     public ExpenseController(IExpenseService expenseService)
     {
         _expenseService = expenseService;
@@ -25,7 +23,7 @@ public class ExpenseController : ControllerBase
     [HttpPost("CreateExpense")]
     public async Task<IActionResult> CreateExpense([FromBody]ExpenseDto dto , int? userId)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token match and store
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // match claim
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
@@ -35,7 +33,6 @@ public class ExpenseController : ControllerBase
         {
             userId = loggedInUserId;
         }
-
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
             if (userId == null)
@@ -64,7 +61,6 @@ public class ExpenseController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            // Allowed to pass null for targetUserId
         }
         var result = await _expenseService.UpdateExpense(dto, userId, loggedInUserId);
         return Ok(result);
@@ -79,8 +75,6 @@ public class ExpenseController : ControllerBase
         {
             return Unauthorized("UserId claim not found.");
         }
-
-
         int loggedInUserId = int.Parse(userIdClaim.Value);
         if (User.IsInRole("User"))
         {
@@ -88,7 +82,6 @@ public class ExpenseController : ControllerBase
         }
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            // Allowed to pass null
         }
         var result = await _expenseService.DeleteExpense(id, userId, loggedInUserId);
         return Ok(result);
@@ -112,7 +105,6 @@ public class ExpenseController : ControllerBase
 
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            // allowed to pass null
         }
         var result = await _expenseService.GetExpenceById(id, userId);
         return Ok(result);

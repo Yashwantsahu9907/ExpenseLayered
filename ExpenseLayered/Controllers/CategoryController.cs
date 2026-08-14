@@ -22,19 +22,17 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> CreateCategory([FromBody] CategoryDto dto)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // generate token ko  match and stor
-
         if (userIdClaim == null)
         {
             return Unauthorized("UserId Claim not found");
         }
 
         int loggedInUserId = int.Parse(userIdClaim.Value);
-
         int targetUserId;
         // Admin and SuperAdmin can create category for any user or themselves
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
-            targetUserId = dto.UserId ?? loggedInUserId;
+            targetUserId = dto.UserId ?? loggedInUserId;   
         }
         else
         {
@@ -56,8 +54,6 @@ public class CategoryController : ControllerBase
             return Unauthorized("UserId claim not found.");
         }
         int userId = int.Parse(userIdClaim.Value);
-
-        // Admin and SuperAdmin can see all users categories
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
             var result = await _categoryService.GetAllCategory(null);
@@ -80,8 +76,6 @@ public class CategoryController : ControllerBase
 
         int loggedInUserId = int.Parse(userIdClaim.Value);
         int? targetUserId;
-
-        // Admin and SuperAdmin can update any user category
         if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
             targetUserId = dto.UserId;
@@ -100,7 +94,6 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> DeleteCategory(int id, int? targetUserId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
         if (userIdClaim == null)
         {
             return Unauthorized("UserId claim not found.");
@@ -134,11 +127,8 @@ public class CategoryController : ControllerBase
         }
 
         int loggedInUserId = int.Parse(userIdClaim.Value);
-
         int? categoryUserId;
-
-        // Admin and SuperAdmin can see any user's category
-        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+            if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
         {
             categoryUserId = targetUserId;
         }

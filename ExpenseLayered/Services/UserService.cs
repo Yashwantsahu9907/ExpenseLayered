@@ -21,8 +21,7 @@ public class UserService : IUserService
         try
         {
             var users = await _userManager.Users.AsNoTracking().ToListAsync();
-            var userList = new List<UserDto>();
-
+            var userList = new List<UserDto>();  // dto store karne ke liye empty list 
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
@@ -76,9 +75,7 @@ public class UserService : IUserService
                     Data = null
                 };
             }
-
             var roles = await _userManager.GetRolesAsync(user);
-
             var userDto = new UserDto
             {
                 Id = user.Id,
@@ -137,7 +134,6 @@ public class UserService : IUserService
                     Data = null
                 };
             }
-
             var user = new User
             {
                 FirstName = dto.FirstName,

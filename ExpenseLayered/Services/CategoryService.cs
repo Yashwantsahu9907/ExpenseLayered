@@ -39,7 +39,6 @@ public class CategoryService : ICategoryService
             };
 
             _context.Categories.Add(category);
-
             await _context.SaveChangesAsync();
 
             return new ResponseResult<CategoryDto>
@@ -158,7 +157,6 @@ public class CategoryService : ICategoryService
             category.UpdatedBy = updatedBy;
 
             await _context.SaveChangesAsync();
-
             return new ResponseResult<CategoryUpdateDto>
             {
                 StatusCode = 200,
@@ -235,18 +233,13 @@ public class CategoryService : ICategoryService
     {
         try
         {
-            var query = _context.Categories.AsNoTracking()
-                .Where(x => x.Id == id && !x.IsDeleted);
-
-            // UserId present hai  sirf us user ki category
-            // UserId null hai  kisi bhi user ki category
+            var query = _context.Categories.AsNoTracking().Where(x => x.Id == id && !x.IsDeleted);
             if (userId.HasValue)
             {
                 query = query.Where(x => x.UserId == userId.Value);
             }
 
             var category = await query.FirstOrDefaultAsync();
-
             if (category == null)
             {
                 return new ResponseResult<CategoryDto>
